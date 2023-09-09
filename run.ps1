@@ -2,16 +2,13 @@
 #  Author: dominguez-posh : https://github.com/dominguez-posh/
 ## Version: 1.0
 using namespace System.Net
-
-# Input bindings are passed in via param block.
 param($Request, $TriggerMetadata)
 
 #Required API Permissions
 #Contacts.ReadWrite
 #User.ReadWrite.All
 
-$returnbody = @()
-$returnbody += ("---Processing Log---")
+
 
 $global:SPOListURI = "https://contooso.com/sites/AllCompany.11168440321.gykonuin/"
 $global:SPOListName = "Contacts"
@@ -26,6 +23,11 @@ $Tenantid = "aa9b233829c82-4010-93b9-967352daee96"
 
 #$ProcessFilter = "*azure admin*" # Set This for Testing :) 
 $ProcessFilter = "*"
+
+###################################################################################################
+
+$returnbody = @()
+$returnbody += ("---Processing Log---")
 
 $uri = "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token"
 $body = @{
