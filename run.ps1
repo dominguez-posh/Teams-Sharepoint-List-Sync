@@ -23,6 +23,7 @@ $AppSecret = "X8w8R!BorTqp6nmdG6871jtzcr~OnuzS5VV!Oa59"
 $AppId = "2c3aa1a5-bcc2-4c32-8daa-0decc310095b"
 $Tenantid = "aa9b233829c82-4010-93b9-967352daee96"
 
+
 #$ProcessFilter = "*azure admin*" # Set This for Testing :) 
 $ProcessFilter = "*"
 
@@ -76,20 +77,48 @@ Param()
 
 }
 
+
 $SharePointListContacts = Get-SPOListContacts
 
-$Users = Get-MgUser | ? DisplayName -like $ProcessFilter
+$Users = Get-MgUser -All | ? DisplayName -like $ProcessFilter
 
 
 foreach ($User in $Users){
-    Write-Host "Processing Contact Updates for User : "  $User.DisplayName
-    $returnbody += ("Processing Contact Updates for User : " + $User.DisplayName).tostring()
+    
+    $Err = $False
+    $UserContacts = @()
 
-    $UserContacts = Get-MgUserContact -UserId $User.Id | ? PersonalNotes
+    try{
+       $UserContacts = Get-MgUserContact -UserId $User.Id -erroraction Stop | ? PersonalNotes -like "*SPOLISTID:*" 
+    }
+    catch{
+        $Err = $True
+    }
+
+    if($Err){}
+    else{
+
+        Write-Host "Processing Contact Updates for User : "  $User.DisplayName
+        $returnbody += ("Processing Contact Updates for User : " + $User.DisplayName).tostring()
 
 
-    $ContactsToAdd = @()
-    foreach($SharePointListContact in $SharePointListContacts){
+        $UserContacts = @()
+        try{
+            $UserContacts = Get-MgUserContact -UserId $User.Id -all -erroraction Stop | ? PersonalNotes -like "*SPOLISTID:*" 
+        }
+        catch{
+            $Err = $True
+        }
+
+
+    
+
+        $ContactsToAdd = @()
+        $ContactsToUpdate = @()
+        $ContactsToDelete = @()
+
+        #Getting Contacts to Add
+        foreach($SharePointListContact in $SharePointListContacts){
         $ToAdd = $True
         foreach($UserContact in $UserContacts){
             if($UserContact.PersonalNotes -like ("SPOLISTID:" + $SharePointListContact.SpoListId)){$ToAdd = $False}
@@ -97,15 +126,14 @@ foreach ($User in $Users){
         if($ToAdd){$ContactsToAdd += $SharePointListContact}
 
     }
-
-    $ContactsToUpdate = @()
-    foreach($SharePointListContact in $SharePointListContacts){
+        #Getting Contacts to Update
+        foreach($SharePointListContact in $SharePointListContacts){
         $ToUpdate = $False
         foreach($UserContact in $UserContacts){
             if($UserContact.PersonalNotes -like ("SPOLISTID:" + $SharePointListContact.SpoListId)){
-                if($UserContact.GivenName -notlike $SharePointListContact.Vorname){$ToUpdate = $True  }
+                if($UserContact.GivenName -notlike $SharePointListContact.Vorname){$ToUpdate = $True }
                 if($UserContact.Surname -notlike $SharePointListContact.Nachname){$ToUpdate = $True }
-                if($UserContact.CompanyName -notlike $SharePointListContact.Firma){$ToUpdate = $True  }
+                if($UserContact.CompanyName -notlike $SharePointListContact.Firma){$ToUpdate = $True }
                 if($UserContact.EmailAddresses[0].Address -notlike $SharePointListContact.Email){$ToUpdate = $True }
                 if($UserContact.Department -notlike $SharePointListContact.Department){$ToUpdate = $True  }
                 if($UserContact.BusinessPhones[0] -notlike $SharePointListContact.Telefonnummer){$ToUpdate = $True }
@@ -116,21 +144,29 @@ foreach ($User in $Users){
         if($ToUpdate){$ContactsToUpdate += $SharePointListContact}
 
     }
-
-    $ContactsToDelete = @()
-        
-    foreach($UserContact in $UserContacts){
+        #Getting Contacts to Delete
+        foreach($UserContact in $UserContacts){
         $Contactdelete = $True
         foreach($SharePointListContact in $SharePointListContacts){
             if($UserContact.PersonalNotes -like ("SPOLISTID:" + $SharePointListContact.SpoListId)){ $Contactdelete = $False }
         }
         if($Contactdelete){$ContactsToDelete += $UserContact}
     
-    }
+        }
 
-    ##Adding Contacts#
 
-    foreach($ContactToAdd in $ContactsToAdd){
+
+    if(-not ($ContactsToAdd -or $ContactsToUpdate -or $ContactsToDelete)){
+            Write-Host  ("--- Nothing to Process.")
+            $returnbody += ("--- Nothing to Process.")
+        }
+
+    
+
+
+        ##Adding Contacts#
+
+        foreach($ContactToAdd in $ContactsToAdd){
         Write-Host  ("--- Adding Contact: " + $ContactToAdd.Vorname + " " + $ContactToAdd.Nachname + " | " + $ContactToAdd.Firma)
         $returnbody += ("--- Adding Contact: " + $ContactToAdd.Vorname + " " + $ContactToAdd.Nachname + " | " + $ContactToAdd.Firma)
 
@@ -141,7 +177,7 @@ foreach ($User in $Users){
             mobilephone = $ContactToAdd.TelefonnummerMobil
             department = $ContactToAdd.Department
             JobTitle = $ContactToAdd.Department
-            personalNotes = ("SPOLISTID:" + $ContactToAdd.SpoListId)
+            PersonalNotes = ("SPOLISTID:" + $ContactToAdd.SpoListId)
             displayname = ($ContactToAdd.Vorname + " " + $ContactToAdd.Nachname + " | " + $ContactToAdd.Firma)
             ImAddresses = @(
                 $ContactToAdd.Email
@@ -158,12 +194,13 @@ foreach ($User in $Users){
 	        )
         }
 
-        New-MgUserContact -UserId $User.Id -BodyParameter $params
+        $Output = New-MgUserContact -UserId $User.Id -BodyParameter $params
     }
 
-    ##Updating Contacts
+        ##Updating Contacts
 
-    foreach($ContactToUpdate in $ContactsToUpdate) {
+        foreach($ContactToUpdate in $ContactsToUpdate) {
+        
         Write-Host  ("--- Updating Contact: " + $ContactToUpdate.Vorname + " " + $ContactToUpdate.Nachname + " | " + $ContactToUpdate.Firma)
         $returnbody += ("--- Updating Contact: " + $ContactToUpdate.Vorname + " " + $ContactToUpdate.Nachname + " | " + $ContactToUpdate.Firma)
         $params = @{
@@ -172,7 +209,7 @@ foreach ($User in $Users){
             companyname = $ContactToUpdate.Firma
             department = $ContactToUpdate.Department
             JobTitle = $ContactToUpdate.Department
-            personalNotes = ("SPOLISTID:" + $ContactToUpdate.SpoListId)
+            PersonalNotes = ("SPOLISTID:" + $ContactToUpdate.SpoListId)
             displayname = ($ContactToUpdate.Vorname + " " + $ContactToUpdate.Nachname + " | " + $ContactToUpdate.Firma)
             ImAddresses = @(
                 $ContactToUpdate.Email
@@ -192,19 +229,20 @@ foreach ($User in $Users){
 
         $ContactID = ($UserContacts | ? PersonalNotes  -like ("SPOLISTID:" + $ContactToUpdate.SpoListId)).id
 
-        Update-MgUserContact -UserId $User.Id -ContactId $ContactID -BodyParameter $params
+        $UpdateUser = Update-MgUserContact -UserId $User.Id -ContactId $ContactID -BodyParameter $params
 
     }
 
+        ##Deleting Contacts
 
-    ##Deleting Contacts
-
-    foreach($ContactToDelete in $ContactsToDelete){
+        foreach($ContactToDelete in $ContactsToDelete){
 
         Write-Host  ("--- Deleting Contact: " + $ContactToDelete.DisplayName)
         $returnbody += ("--- Deleting Contact: " + $ContactToDelete.DisplayName)
 
-        Remove-MgUserContact -UserId $User.Id -ContactId $ContactToDelete.Id
+        #Remove-MgUserContact -UserId $User.Id -ContactId $ContactToDelete.Id
+
+    }
 
     }
 
