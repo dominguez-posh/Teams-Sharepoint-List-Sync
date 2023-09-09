@@ -30,8 +30,22 @@ There are two ways to Deploy the Script.
 ### Setup Sharepoint List
 First of all you need to setup a Sharepoint-Site.
 Use the Template .xlsx File to setup the Sharepoint Site.
+![image](https://github.com/dominguez-posh/Teams-Sharepoint-List-Sync/assets/9081611/49fa5a5d-6077-43b3-b351-05cf2f305709)
+
+Select Excel and Upload the Template.
+
+![image](https://github.com/dominguez-posh/Teams-Sharepoint-List-Sync/assets/9081611/76652a06-4e2f-465c-9953-f96727eaae93)
+
+You can add some data to the Excel template if you want to Upload a adressbook initially. :-)
+
+Change the data-type of the phonenumbers to "Text"
+
+Now the List is ready to go !
+
+
 
 ### Setting Up Graph API Application and secret
+
 
 ### Setup On-Prem
 
