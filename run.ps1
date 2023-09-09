@@ -1,3 +1,6 @@
+#  A Script for syncing a Sharepoint list with contacts for using it as global Adresslist in Teams for every user
+#  Author: dominguez-posh : https://github.com/dominguez-posh/
+## Version: 1.0
 using namespace System.Net
 
 # Input bindings are passed in via param block.
