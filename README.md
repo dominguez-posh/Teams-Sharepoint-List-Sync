@@ -42,15 +42,51 @@ Change the data-type of the phonenumbers to "Text"
 
 Now the List is ready to go !
 
+You need Flowoing things to edit in the Script:
+
+The Site-URL: This is the URL you see in the browser
+The Site-ID: You can get it by adding  "_api/site/id" to the URL. Then you can see the Site-ID in your browser and you can put it into the script.
 
 
 ### Setting Up Graph API Application and secret
 
+https://entra.microsoft.com/#view/Microsoft_AAD_IAM/StartboardApplicationsMenuBlade/~/AppAppsPreview
+You need to create a new Application in Azure AD for the API-Token.
+
+Create a New a client application to access a web API:
+https://learn.microsoft.com/en-us/azure/active-directory/develop/quickstart-configure-app-access-web-apis
+
+Following rights are needed: 
+
+![image](https://github.com/dominguez-posh/Teams-Sharepoint-List-Sync/assets/9081611/578d759d-d299-440f-bbb6-88662637f18c)
+
+Create a new Client Secret, and add Tenant-ID, Application-ID and Client-Secret to the Script.
+
+Now the preperation is done and you can decide how to run the script.
+
+Personally I prefer running the script in a Azure function.
+It is clientless, you do not need to think about it again (exept to renew the Clientsecret) and you can run it scheduled, but also with a URL-Call.
+Also you have no cost at all. But of cause you can run it On-Prem as well
 
 ### Setup On-Prem
+For setting up On-Prem you actually only need to install the following Modules:
 
     Install-Module Microsoft.Graph.Authentication
     Install-Module Microsoft.Graph.Users
     Install-Module Microsoft.Graph.PersonalContacts
 
+When you added the Sharepoint-List and Graph API Informations, you are ready to Go :-)
+First, try to add a new contact to the Sharepoint list and see the magic after running.
+
+You can schedule the Script with a Scheduled Windows Task as well.
+
 ### Setup with Azure Function
+
+To Run the Script in a Azure Function, you only need to Create a new default Powershell (Clientless) Azure Funktion.
+
+Then you need to edit the profile.ps1 for performance and the requirements.ps1 for adding the needed Modules.
+
+Now you can Add a Function. I Reccomend a URL or Time Call.
+
+Paste the Script and you are ready to Go ! :) 
+
