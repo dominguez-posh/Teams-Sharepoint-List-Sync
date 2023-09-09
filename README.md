@@ -29,4 +29,8 @@ There are two ways to Deploy the Script.
 
 ### Setup On-Prem
 
+    Install-Module Microsoft.Graph.Authentication
+    Install-Module Microsoft.Graph.Users
+    Install-Module Microsoft.Graph.PersonalContacts
+
 ### Setup with Azure Function
