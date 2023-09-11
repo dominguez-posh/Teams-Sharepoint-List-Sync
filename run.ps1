@@ -8,7 +8,7 @@ param($Request, $TriggerMetadata)
 #Contacts.ReadWrite
 #User.ReadWrite.All
 
-
+#
 
 $global:SPOListURI = "https://contooso.com/sites/AllCompany.11168440321.gykonuin/"
 $global:SPOListName = "Contacts"
